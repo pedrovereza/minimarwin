@@ -10,6 +10,8 @@ import java.util.Random;
 
 public class Individual implements Chromosome<Individual> {
 
+    public static final int CHROMOSOME_SIZE = 24;
+
     private static final int PHENOTYPE_SIZE = 12;
 
     private static final int X_PHENOTYPE_START = 0;
@@ -17,11 +19,12 @@ public class Individual implements Chromosome<Individual> {
 
     private static final int Y_PHENOTYPE_START = 12;
     private static final int Y_PHENOTYPE_END = 23;
+
     private static final double MINIMUM_VALUE = -2.0;
     private static final double MAXIMUM_VALUE = 4.0;
-    private static final int CHROMOSOME_SIZE = 24;
-    public static final double TWENTY_FIVE_PERCENT = 0.25;
-    public static final double TEN_PERCENT = 0.1;
+
+    private static final double TWENTY_FIVE_PERCENT = 0.25;
+    private static final double TEN_PERCENT = 0.1;
 
     private byte[] chromosome;
     private final Random random;
@@ -73,10 +76,15 @@ public class Individual implements Chromosome<Individual> {
             return false;
         }
 
-        Individual other = (Individual)o;
+        Individual other = (Individual) o;
 
-        return  phenotypeForX() == other.phenotypeForX() &&
+        return phenotypeForX() == other.phenotypeForX() &&
                 phenotypeForY() == other.phenotypeForY();
+    }
+
+    @Override
+    public String toString() {
+        return String.format("Phenotypes: x: %f, y: %f", phenotypeForX(), phenotypeForY());
     }
 
     private List<Individual> crossoverAtPosition(Individual individual, int positionToCrossover) {
@@ -109,7 +117,7 @@ public class Individual implements Chromosome<Individual> {
     }
 
     private double decimalToDomainRange(double decimal) {
-        return MINIMUM_VALUE + (decimal * (MAXIMUM_VALUE /(4096 -1)));
+        return MINIMUM_VALUE + (decimal * (MAXIMUM_VALUE / (4096 - 1)));
     }
 
     private void mutateAtRandomPosition(byte[] newChromosome) {
