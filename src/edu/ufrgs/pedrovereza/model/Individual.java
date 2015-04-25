@@ -10,64 +10,61 @@ import java.util.Random;
 
 public class Individual implements Chromosome<Individual> {
 
-    public static final int CHROMOSOME_SIZE = 24;
-
-    private static final int PHENOTYPE_SIZE = 12;
-
-    private static final int X_PHENOTYPE_START = 0;
-    private static final int X_PHENOTYPE_END = 11;
-
-    private static final int Y_PHENOTYPE_START = 12;
-    private static final int Y_PHENOTYPE_END = 23;
+    public static final int CHROMOSOME_SIZE = 12;
 
     private static final double MINIMUM_VALUE = -2.0;
     private static final double MAXIMUM_VALUE = 4.0;
 
-    private static final double TWENTY_FIVE_PERCENT = 0.25;
     private static final double TEN_PERCENT = 0.1;
 
-    private byte[] chromosome;
+    private static final int CROSSOVER_RANGE = 3;
+
+    private byte[] chromosomeForY;
+    private byte[] chromosomeForX;
+
     private final Random random;
 
-    public static Individual fromChromosome(byte[] chromosome) {
-        return new Individual(chromosome, new Random());
+    public static Individual fromChromosomes(byte[] chromosomeForX, byte[] chromosomeForY) {
+        return new Individual(chromosomeForX, chromosomeForY, new Random());
     }
 
-    public Individual(byte[] chromosome, Random random) {
-        this.chromosome = chromosome.clone();
+    public Individual(byte[] chromosomeForX, byte[] chromosomeForY, Random random) {
+        this.chromosomeForY = chromosomeForY.clone();
+        this.chromosomeForX = chromosomeForX.clone();
         this.random = random;
     }
 
     public double phenotypeForX() {
-        double xValue = binaryToDecimal(X_PHENOTYPE_START, X_PHENOTYPE_END);
+        double xValue = binaryToDecimal(chromosomeForX);
         return decimalToDomainRange(xValue);
     }
 
     public double phenotypeForY() {
-        double yValue = binaryToDecimal(Y_PHENOTYPE_START, Y_PHENOTYPE_END);
+        double yValue = binaryToDecimal(chromosomeForY);
         return decimalToDomainRange(yValue);
     }
 
     @Override
     public List<Individual> crossover(Individual individual) {
-        if (random.nextDouble() < TWENTY_FIVE_PERCENT) {
+        if (random.nextDouble() > TEN_PERCENT) {
             return emptyList();
         }
 
-        int positionToCrossover = (int) (random.nextDouble() * (CHROMOSOME_SIZE - 1));
+        int positionToCrossover = random.nextInt(CHROMOSOME_SIZE);
 
         return crossoverAtPosition(individual, positionToCrossover);
     }
 
     @Override
     public Individual mutate() {
-        byte[] newChromosome = chromosome.clone();
+        byte[] newChromosomeForX = chromosomeForX.clone();
+        byte[] newChromosomeForY = chromosomeForY.clone();
 
-        if (random.nextDouble() > TEN_PERCENT) {
-            mutateAtRandomPosition(newChromosome);
-        }
+            mutateAtRandomPosition(newChromosomeForX);
 
-        return new Individual(newChromosome, random);
+            mutateAtRandomPosition(newChromosomeForY);
+
+        return Individual.fromChromosomes(newChromosomeForX, newChromosomeForY);
     }
 
     @Override
@@ -89,16 +86,27 @@ public class Individual implements Chromosome<Individual> {
 
     private List<Individual> crossoverAtPosition(Individual individual, int positionToCrossover) {
         List<Individual> offspring = new ArrayList<Individual>(2);
-        byte[] firstChromosome = chromosome.clone();
-        byte[] secondChromosome = chromosome.clone();
+        int max_crossover = CHROMOSOME_SIZE - positionToCrossover;
 
-        arraycopy(individual.chromosome, 0, firstChromosome, 0, positionToCrossover);
+        byte[] firstChromosomeForX = chromosomeForX.clone();
+        byte[] secondChromosomeForX = chromosomeForX.clone();
 
-        arraycopy(individual.chromosome, positionToCrossover, secondChromosome, positionToCrossover,
-                CHROMOSOME_SIZE - positionToCrossover);
+        arraycopy(individual.chromosomeForX, 0, firstChromosomeForX, 0, CROSSOVER_RANGE);
 
-        Individual firstIndividual = new Individual(firstChromosome, random);
-        Individual secondIndividual = new Individual(secondChromosome, random);
+        arraycopy(individual.chromosomeForX, positionToCrossover, secondChromosomeForX, positionToCrossover,
+                max_crossover >  CROSSOVER_RANGE ? CROSSOVER_RANGE : max_crossover);
+
+        byte[] firstChromosomeForY = chromosomeForY.clone();
+        byte[] secondChromosomeForY = chromosomeForY.clone();
+
+
+        arraycopy(individual.chromosomeForY, 0, firstChromosomeForY, 0, CROSSOVER_RANGE);
+
+        arraycopy(individual.chromosomeForY, positionToCrossover, secondChromosomeForY, positionToCrossover,
+                max_crossover >  CROSSOVER_RANGE ? CROSSOVER_RANGE : max_crossover);
+
+        Individual firstIndividual = Individual.fromChromosomes(firstChromosomeForX, firstChromosomeForY);
+        Individual secondIndividual = Individual.fromChromosomes(secondChromosomeForX, secondChromosomeForY);
 
         offspring.add(firstIndividual);
         offspring.add(secondIndividual);
@@ -106,14 +114,14 @@ public class Individual implements Chromosome<Individual> {
         return offspring;
     }
 
-    private double binaryToDecimal(int start, int end) {
-        double yValue = 0;
+    private double binaryToDecimal(byte[] chromosome) {
+        double value = 0;
 
-        for (int i = start; i <= end; ++i) {
-            yValue += chromosome[i] * (Math.pow(2.0, (i % PHENOTYPE_SIZE)));
+        for (int i = 0; i < chromosome.length; ++i) {
+            value += chromosome[i] * (Math.pow(2.0, i));
         }
 
-        return yValue;
+        return value;
     }
 
     private double decimalToDomainRange(double decimal) {
@@ -121,7 +129,7 @@ public class Individual implements Chromosome<Individual> {
     }
 
     private void mutateAtRandomPosition(byte[] newChromosome) {
-        int positionToMutate = (int) (random.nextDouble() * (CHROMOSOME_SIZE - 1));
+        int positionToMutate = random.nextInt(CHROMOSOME_SIZE);
 
         newChromosome[positionToMutate] = (byte) ((newChromosome[positionToMutate] + 1) % 2);
     }

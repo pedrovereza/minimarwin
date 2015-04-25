@@ -12,16 +12,18 @@ import java.util.List;
 
 public class IndividualTest {
 
-    private byte[] chromosome;
+    private byte[] chromosomeForX;
+    private byte[] chromosomeForY;
 
     @Before
     public void setUp() throws Exception {
-        chromosome = new byte[24];
+        chromosomeForX = new byte[12];
+        chromosomeForY = new byte[12];
     }
 
     @Test
     public void lowest_phenotype_is_minus_2() throws Exception {
-        Individual individual = Individual.fromChromosome(chromosome);
+        Individual individual = Individual.fromChromosomes(chromosomeForX, chromosomeForY);
 
         double xValue = individual.phenotypeForX();
         assertEquals(-2.0, xValue, 0.0);
@@ -29,43 +31,20 @@ public class IndividualTest {
 
     @Test
     public void highest_phenotype_is_2() throws Exception {
-        Arrays.fill(chromosome, (byte) 1);
+        Arrays.fill(chromosomeForX, (byte) 1);
 
-        Individual individual = Individual.fromChromosome(chromosome);
+        Individual individual = Individual.fromChromosomes(chromosomeForX, chromosomeForY);
 
         double xValue = individual.phenotypeForX();
         assertEquals(2.0, xValue, 0.0);
     }
 
     @Test
-    public void x_and_y_are_one_chromosome() throws Exception {
-        Individual individual = Individual.fromChromosome(chromosome);
-
-        double xValue = individual.phenotypeForX();
-        double yValue = individual.phenotypeForY();
-
-        assertEquals(-2.0, xValue, 0.0);
-        assertEquals(-2.0, yValue, 0.0);
-    }
-
-    @Test
-    public void mutation_has_ten_percent_change_to_happen() throws Exception {
-        FakeRandom fakeRandom = new FakeRandom();
-        fakeRandom.valueForCall(0.09, 1);
-
-        Individual individual = new Individual(chromosome, fakeRandom);
-
-        Individual newIndividual = individual.mutate();
-
-        assertEquals(newIndividual, individual);
-    }
-
-    @Test
-    public void mutated_individual_should_be_different_from_original() throws Exception {
+    public void mutation_always_happens() throws Exception {
         FakeRandom fakeRandom = new FakeRandom();
         fakeRandom.valueForCall(0.20, 1);
 
-        Individual individual = new Individual(chromosome, fakeRandom);
+        Individual individual = new Individual(chromosomeForX, chromosomeForY, fakeRandom);
 
         Individual newIndividual = individual.mutate();
 
@@ -73,16 +52,31 @@ public class IndividualTest {
     }
 
     @Test
-    public void mutation_affects_only_one_phenotype() throws Exception {
+    public void mutated_individual_should_be_different_from_original() throws Exception {
         FakeRandom fakeRandom = new FakeRandom();
         fakeRandom.valueForCall(0.20, 1);
-        fakeRandom.valueForCall(0.9, 2);
+        fakeRandom.valueForCall(0.09, 1);
 
-        Individual individual = new Individual(chromosome, fakeRandom);
+        Individual individual = new Individual(chromosomeForX, chromosomeForY, fakeRandom);
 
         Individual newIndividual = individual.mutate();
 
-        assertEquals(newIndividual.phenotypeForX(), individual.phenotypeForX(), 0.0);
+        assertNotEquals(newIndividual, individual);
+    }
+
+    @Test
+    public void mutation_affects_both_phenotypes() throws Exception {
+        FakeRandom fakeRandom = new FakeRandom();
+        fakeRandom.valueForCall(0.20, 1);
+        fakeRandom.valueForCall(0.20, 2);
+        fakeRandom.valueForCall(0.9, 3);
+        fakeRandom.valueForCall(0.1, 4);
+
+        Individual individual = new Individual(chromosomeForX, chromosomeForY, fakeRandom);
+
+        Individual newIndividual = individual.mutate();
+
+        assertNotEquals(newIndividual.phenotypeForX(), individual.phenotypeForX(), 0.0);
         assertNotEquals(newIndividual.phenotypeForY(), individual.phenotypeForY(), 0.0);
     }
 
@@ -91,11 +85,11 @@ public class IndividualTest {
         FakeRandom fakeRandom = new FakeRandom();
         fakeRandom.valueForCall(0.20, 1);
 
-        Individual individual = new Individual(chromosome, fakeRandom);
+        Individual individual = new Individual(chromosomeForX, chromosomeForY, fakeRandom);
 
-        Arrays.fill(chromosome, (byte) 1);
+        Arrays.fill(chromosomeForX, (byte) 1);
 
-        Individual other = new Individual(chromosome, fakeRandom);
+        Individual other = new Individual(chromosomeForX, chromosomeForY,  fakeRandom);
 
         List<Individual> offspring = individual.crossover(other);
 
@@ -105,19 +99,20 @@ public class IndividualTest {
     @Test
     public void cross_over_generates_two_individuals() throws Exception {
         FakeRandom fakeRandom = new FakeRandom();
-        fakeRandom.valueForCall(0.25, 1);
-        fakeRandom.valueForCall(0.9, 2);
+        fakeRandom.valueForCall(0.09, 1);
+        fakeRandom.valueForNextIntWithMax(4, 12);
 
-        Individual individual = new Individual(chromosome, fakeRandom);
+        Individual individual = new Individual(chromosomeForX, chromosomeForY,  fakeRandom);
 
-        Arrays.fill(chromosome, (byte) 1);
+        Arrays.fill(chromosomeForX, (byte) 1);
+        Arrays.fill(chromosomeForY, (byte) 1);
 
-        Individual other = new Individual(chromosome, fakeRandom);
+        Individual other = new Individual(chromosomeForX, chromosomeForY, fakeRandom);
 
         List<Individual> offspring = individual.crossover(other);
 
-        Individual expectedChild = individualFromChromosome("111111111111111111110000");
-        Individual otherExpectedChild = individualFromChromosome("000000000000000000001111");
+        Individual expectedChild = individualFromChromosomes("111000000000", "111000000000");
+        Individual otherExpectedChild = individualFromChromosomes("000011100000" ,"000011100000");
 
         assertFalse(offspring.isEmpty());
         assertEquals(expectedChild, offspring.get(0));
@@ -125,13 +120,19 @@ public class IndividualTest {
     }
 
 
-    private Individual individualFromChromosome(String chromosome) {
-        byte[] actualChromosome = new byte[24];
+    private Individual individualFromChromosomes(String chromosomeX, String chromosomeY) {
+        byte[] actualChromosomeX = new byte[12];
+        byte[] actualChromosomeY = new byte[12];
 
-        for (int i = 0; i < chromosome.length(); i++) {
-            actualChromosome[i] = (byte) (chromosome.charAt(i) == '1' ? 1 : 0);
+        for (int i = 0; i < chromosomeX.length(); i++) {
+            actualChromosomeX[i] = (byte) (chromosomeX.charAt(i) == '1' ? 1 : 0);
         }
 
-        return Individual.fromChromosome(actualChromosome);
+        for (int i = 0; i < chromosomeY.length(); i++) {
+            actualChromosomeY[i] = (byte) (chromosomeY.charAt(i) == '1' ? 1 : 0);
+        }
+
+
+        return Individual.fromChromosomes(actualChromosomeX, actualChromosomeY);
     }
 }
