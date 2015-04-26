@@ -16,7 +16,7 @@ public class Function implements Fitness<Individual, Double> {
         return functionW16(x, y);
     }
 
-    private double functionW16(double x, double y) {
+    public double functionW16(double x, double y) {
         return functionW14(x, y) + functionW4(x, y);
     }
 
