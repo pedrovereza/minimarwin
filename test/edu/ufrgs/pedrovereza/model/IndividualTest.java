@@ -112,7 +112,7 @@ public class IndividualTest {
         List<Individual> offspring = individual.crossover(other);
 
         Individual expectedChild = individualFromChromosomes("111000000000", "111000000000");
-        Individual otherExpectedChild = individualFromChromosomes("000011100000" ,"000011100000");
+        Individual otherExpectedChild = individualFromChromosomes("000011100000", "000011100000");
 
         assertFalse(offspring.isEmpty());
         assertEquals(expectedChild, offspring.get(0));
