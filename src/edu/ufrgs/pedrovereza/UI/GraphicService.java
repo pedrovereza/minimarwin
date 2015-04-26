@@ -26,24 +26,12 @@ public class GraphicService extends AbstractAnalysis {
     public static final float RADIUS = 0.05f;
     public static final int SLICING = 8;
     private final Function function;
-    private final List<Coord3d> solutionsCoordinates;
     private final List<Coord3d> populationCoordinates;
     private Coord3d finalSolution;
 
     public GraphicService(Function function) {
         this.function = function;
-        solutionsCoordinates = new LinkedList<Coord3d>();
         populationCoordinates = new LinkedList<Coord3d>();
-    }
-
-    public void addSolution(double x, double y, double z) {
-        Coord3d coordinate = new Coord3d(x, y, z);
-
-        if (solutionsCoordinates.contains(coordinate)) {
-            return;
-        }
-
-        solutionsCoordinates.add(coordinate);
     }
 
     public void addUniqueIndividual(double x, double y, double z) {
@@ -59,17 +47,11 @@ public class GraphicService extends AbstractAnalysis {
     public void plot() throws Exception {
         AnalysisLauncher.open(this);
         plotWithPopulation();
-        plotWithSolutions();
         plotFinalSolution();
     }
 
     private void plotFinalSolution() {
         chart.getScene().add(toSphere(finalSolution, Color.GREEN));
-    }
-
-    public void plotWithSolutions() {
-        List<AbstractDrawable> solutions = coordinatesToSpheres(solutionsCoordinates, Color.BLACK);
-        chart.getScene().add(solutions);
     }
 
     public void plotWithPopulation() {

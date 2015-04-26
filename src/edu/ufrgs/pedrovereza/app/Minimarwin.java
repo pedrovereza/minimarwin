@@ -30,7 +30,6 @@ public class Minimarwin {
 
         Individual finalSolution = ga.getBest();
 
-
         graphicService.addFinalSolution(finalSolution.phenotypeForX(), finalSolution.phenotypeForY(),
                 ga.fitness(finalSolution));
 
@@ -49,11 +48,9 @@ public class Minimarwin {
                 double bestFit = ga.fitness(best);
                 int iteration = ga.getIteration();
 
-                graphicService.addSolution(best.phenotypeForX(), best.phenotypeForY(), bestFit);
-
-                Individual individual = ga.getWorst();
-                graphicService.addUniqueIndividual(individual.phenotypeForX(), individual.phenotypeForX(),
-                        ga.fitness(individual));
+                Individual worst = ga.getWorst();
+                graphicService.addUniqueIndividual(worst.phenotypeForX(), worst.phenotypeForX(),
+                        ga.fitness(worst));
 
                 System.out.println(String.format("%s\t%s\t%s", iteration, bestFit, best));
             }
